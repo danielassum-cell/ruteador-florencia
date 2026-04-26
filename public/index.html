@@ -278,14 +278,14 @@ async function procesar(){
     fd.append('scale','true');
     fd.append('base64Image',`data:application/pdf;base64,${b64}`);
 
-    const resp=await fetch('/.netlify/functions/ocr',{method:'POST',body:fd});
+    const resp=await fetch('/.netlify/functions/ocr',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pdfBase64:b64})
+    });
     const data=await resp.json();
-
-    if(data.IsErroredOnProcessing){
-      throw new Error(data.ErrorMessage?.[0]||'Error OCR');
-    }
-
-    const texto=data.ParsedResults.map(r=>r.ParsedText).join('\n');
+    if(data.error) throw new Error(data.error);
+    const texto=data.texto||'';
     ss('Analizando paquetes...','ld');
 
     const {paquetes, pendientes} = parsearTexto(texto);
