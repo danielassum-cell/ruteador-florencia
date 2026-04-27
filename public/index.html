@@ -263,32 +263,30 @@ async function procesar(){
   ss('Extrayendo texto del PDF...','ld');
 
   try{
-    const b64=await new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=()=>res(r.result.split(',')[1]);
-      r.onerror=rej;
-      r.readAsDataURL(pdfFiles[i]);
-    });
-
-    ss('Procesando con OCR...','ld');
-    const fd=new FormData();
-    fd.append('apikey',OCR_KEY);
-    fd.append('language','spa');
-    fd.append('OCREngine','2');
-    fd.append('scale','true');
-    fd.append('base64Image',`data:application/pdf;base64,${b64}`);
-
-    const resp=await fetch('/.netlify/functions/ocr',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({imageBase64:b64,mimeType:mime})
-    });
-    const data=await resp.json();
-    if(data.error) throw new Error(data.error);
-    const texto=data.texto||'';
+    let textoTotal='';
+    for(let i=0;i<pdfFiles.length;i++){
+      ss(`Procesando imagen ${i+1} de ${pdfFiles.length}...`,'ld');
+      const b64=await new Promise((res,rej)=>{
+        const r=new FileReader();
+        r.onload=()=>res(r.result.split(',')[1]);
+        r.onerror=rej;
+        r.readAsDataURL(pdfFiles[i]);
+      });
+      const mime=pdfFiles[i].type||'image/jpeg';
+      const resp=await fetch('/.netlify/functions/ocr',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({imageBase64:b64,mimeType:mime})
+      });
+      const data=await resp.json();
+      if(data.error) throw new Error(data.error);
+      textoTotal+=(data.texto||'')+'
+';
+    }
+    {
+    const texto=textoTotal;
     ss('Analizando paquetes...','ld');
-
-    const {paquetes, pendientes} = parsearTexto(texto);
+    const {paquetes, pendientes} = parsearTexto(textoTotal);
 
     if(!paquetes.length){
       ss('No se encontraron paquetes. Intentá con las imágenes manualmente.','err');
