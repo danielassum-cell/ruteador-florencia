@@ -258,7 +258,7 @@ function ss(m,t=''){
 
 // ── Procesar PDF via OCR.space ────────────────────────────────────────────
 async function procesar(){
-  if(!pdfFile)return;
+  if(!pdfFiles.length)return;
   document.getElementById('btnProcesar').disabled=true;
   ss('Extrayendo texto del PDF...','ld');
 
@@ -267,7 +267,7 @@ async function procesar(){
       const r=new FileReader();
       r.onload=()=>res(r.result.split(',')[1]);
       r.onerror=rej;
-      r.readAsDataURL(pdfFile);
+      r.readAsDataURL(pdfFiles[i]);
     });
 
     ss('Procesando con OCR...','ld');
